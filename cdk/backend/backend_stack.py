@@ -35,9 +35,9 @@ class BackendStack(core.Stack):
                                 default_capacity_instance=ec2.InstanceType("m6g.large"),
                                 default_capacity=3)
         # add arm/graviton nodegroup
-        cluster.add_nodegroup_capacity("graviton", desired_size=1,
-                                instance_type=ec2.InstanceType("m6g.large"),
-                                nodegroup_name="graviton", node_role=cluster.default_nodegroup.role)
+        # cluster.add_nodegroup_capacity("graviton", desired_size=1,
+        #                         instance_type=ec2.InstanceType("m6g.large"),
+        #                         nodegroup_name="graviton", node_role=cluster.default_nodegroup.role)
                                 
         # add secret access to eks node role
         cluster.default_nodegroup.role.add_managed_policy(
@@ -92,7 +92,7 @@ class BackendStack(core.Stack):
         rds_cluster = rds.DatabaseCluster(self, "Database",
             engine=rds.DatabaseClusterEngine.aurora_mysql(version=rds.AuroraMysqlEngineVersion.VER_2_10_2),
             instance_props={
-                "instance_type": ec2.InstanceType.of(ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE),
+                "instance_type": ec2.InstanceType.of(ec2.InstanceClass.R6G, ec2.InstanceSize.LARGE),
                 "vpc_subnets": {
                     "subnet_type": ec2.SubnetType.PRIVATE
                 },
