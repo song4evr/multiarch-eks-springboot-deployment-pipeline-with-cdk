@@ -32,8 +32,8 @@ class BackendStack(core.Stack):
     def create_eks(self, vpc):
         # create eks cluster with amd nodegroup
         cluster = eks.Cluster(self, "EKS", vpc=vpc, version=eks.KubernetesVersion.V1_21,
-                                default_capacity_instance=ec2.InstanceType("m5.large"),
-                                default_capacity=1)
+                                default_capacity_instance=ec2.InstanceType("m6g.large"),
+                                default_capacity=3)
         # add arm/graviton nodegroup
         cluster.add_nodegroup_capacity("graviton", desired_size=1,
                                 instance_type=ec2.InstanceType("m6g.large"),
@@ -71,24 +71,28 @@ class BackendStack(core.Stack):
                                         description="Allow redis connection from eks",
                                         allow_all_outbound=True)
         eks.connections.allow_to(security_group, ec2.Port.tcp(6379))
-        # create redis cluster
-        redis = elasticache.CfnCacheCluster(self, "RedisCluster",
-                                          engine="redis",
-                                          cache_node_type= "cache.t2.small",
-                                          num_cache_nodes=1,
-                                          cluster_name="redis-springboot-multiarch",
-                                          vpc_security_group_ids=[security_group.security_group_id],
-                                          cache_subnet_group_name=subnet_group.cache_subnet_group_name)
-        redis.add_depends_on(subnet_group);
-        
-        return redis
-        
+
+        # create replication group
+        replication_group = elasticache.CfnReplicationGroup(self, "RedisClusterReplicationGroup",
+                                                            engine="redis",
+                                                            cache_node_type="cache.m6g.large",
+                                                            replication_group_description="redis-springboot-multiarch replication group",
+                                                            automatic_failover_enabled=True,
+                                                            multi_az_enabled=True,
+                                                            num_cache_clusters=2,
+                                                            cache_subnet_group_name=subnet_group.cache_subnet_group_name,
+                                                            security_group_ids=[security_group.security_group_id]
+                                                            )
+
+        replication_group.add_depends_on(subnet_group)
+
+        return replication_group
         
     def create_rds(self, vpc, eks):
         rds_cluster = rds.DatabaseCluster(self, "Database",
-            engine=rds.DatabaseClusterEngine.aurora_mysql(version=rds.AuroraMysqlEngineVersion.VER_2_08_1),
+            engine=rds.DatabaseClusterEngine.aurora_mysql(version=rds.AuroraMysqlEngineVersion.VER_2_10_2),
             instance_props={
-                "instance_type": ec2.InstanceType.of(ec2.InstanceClass.BURSTABLE2, ec2.InstanceSize.SMALL),
+                "instance_type": ec2.InstanceType.of(ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE),
                 "vpc_subnets": {
                     "subnet_type": ec2.SubnetType.PRIVATE
                 },
@@ -144,4 +148,4 @@ class BackendStack(core.Stack):
               },
             },
           }],
-        );
+        )

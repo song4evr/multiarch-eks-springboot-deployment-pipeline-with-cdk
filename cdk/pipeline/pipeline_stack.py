@@ -5,7 +5,6 @@ from aws_cdk import (core, aws_codebuild as codebuild,
                      aws_codecommit as codecommit,
                      aws_codepipeline as codepipeline,
                      aws_codepipeline_actions as codepipeline_actions,
-                     aws_lambda as lambda_, aws_s3 as s3,
                      aws_iam as iam, aws_ecr as ecr)
 
 class PipelineStack(core.Stack):
@@ -111,8 +110,8 @@ class PipelineStack(core.Stack):
                     "DOCKERHUB_PASSWORD": codebuild.BuildEnvironmentVariable(
                                 value="/springboot-multiarch/dockerhub/password ", 
                                 type=codebuild.BuildEnvironmentVariableType.PARAMETER_STORE),
-                    "REDIS_HOST": codebuild.BuildEnvironmentVariable(value=self.redis.attr_redis_endpoint_address),
-                    "REDIS_PORT": codebuild.BuildEnvironmentVariable(value=self.redis.attr_redis_endpoint_port),
+                    "REDIS_HOST": codebuild.BuildEnvironmentVariable(value=self.redis.attr_primary_end_point_address),
+                    "REDIS_PORT": codebuild.BuildEnvironmentVariable(value=self.redis.attr_primary_end_point_port),
                     "RDS_SECRET": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.secret.secret_name),
                     "RDS_HOST": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.cluster_endpoint.hostname),
                     "RDS_PORT": codebuild.BuildEnvironmentVariable(value=self.rds_cluster.cluster_endpoint.port),
